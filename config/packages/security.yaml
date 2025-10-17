@@ -1,0 +1,50 @@
+security:
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'bcrypt'
+
+    providers:
+        app_user_provider:
+            chain:
+                providers: ['app_admin_provider', 'app_teacher_provider', 'app_student_provider']
+        app_admin_provider:
+            entity:
+                class: App\Entity\AdminUser
+                property: username # <--- მთავარი შესწორება
+        app_student_provider:
+            entity:
+                class: App\Entity\Student
+                property: email
+        app_teacher_provider:
+            entity:
+                class: App\Entity\Teacher
+                property: email
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        # ჩვენი უნივერსალური ლოგინის ენდფოინთი
+        login_api:
+            pattern: ^/api/login
+            stateless: true
+            security: false
+
+        register:
+            pattern: ^/api/register
+            stateless: true
+            security: false
+
+        # მთავარი API firewall-ი, რომელიც JWT-ით არის დაცული
+        api:
+            pattern:   ^/api
+            stateless: true
+            jwt: ~
+            provider: app_user_provider
+
+    access_control:
+        - { path: ^/health, roles: PUBLIC_ACCESS }
+        - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/register, roles: PUBLIC_ACCESS }
+        - { path: ^/api/admin, roles: ROLE_ADMIN }
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
